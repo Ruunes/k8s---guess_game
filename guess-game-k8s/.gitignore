@@ -1,0 +1,11 @@
+.venv
+.vscode
+*/__pycache__/*
+db/*
+!db/init.sql
+*.sqlite3
+*.pyc
+*.pyo
+bin/
+*.lock
+
