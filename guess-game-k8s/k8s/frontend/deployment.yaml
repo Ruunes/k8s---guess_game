@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: runesma/guess-frontend:v1
+          image: runesma/guess-frontend:v2
 
           ports:
             - containerPort: 80
