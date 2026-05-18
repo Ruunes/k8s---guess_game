@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: runesma/guess-backend:v3
+          image: runesma/guess-backend:v4
 
           ports:
             - containerPort: 5000

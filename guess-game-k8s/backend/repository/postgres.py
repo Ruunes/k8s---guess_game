@@ -5,12 +5,15 @@ import psycopg2
 class PostgresRepository(Repository):
     def __init__(self, db_string):
         self.db_string = db_string
-        self.conn = psycopg2.connect(self.db_string)
         self._create_game_table()
 
+    def _get_connection(self):
+        return psycopg2.connect(self.db_string)
+
     def _create_game_table(self):
-        conn = self.conn
+        conn = self._get_connection()
         cursor = conn.cursor()
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS game (
                 game_id TEXT PRIMARY KEY,
@@ -18,28 +21,44 @@ class PostgresRepository(Repository):
                 attempts INTEGER
             )
         ''')
+
         conn.commit()
+        cursor.close()
+        conn.close()
 
     def store(self, game_id, data: dict):
-        conn = self.conn
+        conn = self._get_connection()
         cursor = conn.cursor()
+
         cursor.execute('''
             INSERT INTO game (game_id, password, attempts)
             VALUES (%s, %s, %s)
         ''', (game_id, data["password"], 0))
+
         conn.commit()
+        cursor.close()
+        conn.close()
 
     def retrieve(self, game_id):
-        conn = self.conn
+        conn = self._get_connection()
         cursor = conn.cursor()
+
         cursor.execute('''
             SELECT game_id, password, attempts
             FROM game
             WHERE game_id = %s
         ''', (game_id,))
+
         result = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
 
         if result:
             game_id, password, attempts = result
-            return {"password": password, "attempts": attempts}
+            return {
+                "password": password,
+                "attempts": attempts
+            }
+
         return None
