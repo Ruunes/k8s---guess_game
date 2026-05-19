@@ -6,7 +6,7 @@ metadata:
   namespace: guess-game
 
 spec:
-  replicas: 3
+  replicas: {{ .Values.backend.replicas }}
 
   selector:
     matchLabels:
@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: runesma/guess-backend:v4
+          image: {{ .Values.backend.image }}
 
           ports:
             - containerPort: 5000

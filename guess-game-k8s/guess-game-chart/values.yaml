@@ -1,0 +1,11 @@
+backend:
+  image: runesma/guess-backend:v4
+  replicas: 3
+
+frontend:
+  image: runesma/guess-frontend:v2
+  nodePort: 30080
+
+postgres:
+  image: postgres:15
+  storage: 1Gi
