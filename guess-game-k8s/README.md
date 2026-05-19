@@ -1,272 +1,394 @@
-# Guess Game - Docker Compose
+# Guess Game - Kubernetes + Helm + k3d
 
-## 📌 Descrição
+Projeto desenvolvido para a disciplina de **Conteinerização e Orquestração** da **PUC Minas**.
 
-Este projeto implementa o jogo **Guess Game** utilizando uma arquitetura baseada em containers com Docker Compose.
-
-A aplicação é composta por:
-- Backend em Python (Flask)
-- Frontend em React
-- Banco de dados PostgreSQL
-- NGINX como proxy reverso e balanceador de carga
+Este trabalho é a continuação da primeira etapa do projeto, onde inicialmente foi realizada apenas a conteinerização da aplicação utilizando Docker.  
+Nesta nova etapa, o ambiente foi reestruturado utilizando Kubernetes, adicionando recursos de orquestração, persistência, escalabilidade automática e gerenciamento com Helm Charts.
 
 ---
 
-## 🏗️ Arquitetura
+# Objetivo do projeto
 
-A aplicação foi estruturada utilizando múltiplos serviços orquestrados pelo Docker Compose:
+O objetivo deste projeto é demonstrar a implantação de uma aplicação completa utilizando Kubernetes local com k3d, contendo:
 
-[ Cliente ] -> [ NGINX (Proxy Reverso + Frontend) ] -> [ Backend (Flask - múltiplas instâncias) ] -> [ PostgreSQL ]
-
----
-
-## 📁 Estrutura do Repositório
-```
-guess_game/
-├─ backend/
-├─ frontend/
-├─ nginx/
-├─ db/
-├─ docker-compose.yml
-└─ README.md
-```
----
-
-## ⚙️ Serviços
-
-### 🔹 Backend (Flask)
-- Responsável pela lógica do jogo
-- Conecta ao PostgreSQL
-- Pode ser escalado horizontalmente
-- Roda internamente na porta **5000**
-
----
-
-### 🔹 Frontend (React)
-- Interface do usuário
-- Buildado e servido via NGINX
-
----
-
-### 🔹 NGINX
-- Atua como proxy reverso
-- Faz balanceamento de carga entre múltiplas instâncias do backend (round-robin)
-- Serve os arquivos estáticos do frontend
-
----
-
-### 🔹 PostgreSQL
-- Armazena os dados do jogo
-- Utiliza volume persistente
-- Inicializado automaticamente via `db/init.sql`
-
----
-
-## 🧠 Decisões de Design
-
-### 🔹 Docker Compose
-Utilizado para orquestrar todos os serviços, permitindo fácil gerenciamento e reprodução do ambiente.
-
----
-
-### 🔹 Separação de Containers
-Cada componente roda em seu próprio container:
-- Backend
-- Frontend
-- Banco
-- Proxy
-
-Isso garante:
-- Isolamento
-- Escalabilidade
-- Facilidade de manutenção
-
----
-
-### 🔹 Comunicação entre Containers
-Os containers se comunicam utilizando DNS interno do Docker Compose.
-
-Exemplo:
-- O backend acessa o banco usando o hostname: `db`
-
----
-
-### 🔹 Inicialização do Banco
-
-A criação da tabela não é feita pelos containers do backend para evitar problemas de concorrência em ambientes com múltiplas instâncias.
-
-Em vez disso, é utilizado um script `init.sql`, executado automaticamente pelo PostgreSQL na primeira inicialização.
-
----
-
-### 🔹 Volume Persistente (Banco)
-
-O banco utiliza volume Docker:
-
-postgres_data:/var/lib/postgresql/data
-
-
-Garantindo persistência dos dados mesmo após reinício dos containers.
-
----
-
-### 🔹 Balanceamento de Carga
-
-O NGINX distribui as requisições entre múltiplas instâncias do backend utilizando **round-robin**.
-
-Exemplo:
-- backend-1
-- backend-2
-- backend-3
-
----
-
-### 🔹 Resiliência
-
-Todos os containers utilizam:
-
-restart: always
-
-
-Garantindo reinicialização automática em caso de falha.
-
----
-
-### 🔹 Escalabilidade
-
-O número de instâncias do backend pode ser alterado dinamicamente:
-
-```bash
-docker-compose up --scale backend=3
-```
----
-
-## 🔹 Ordem de Inicialização
-
-O backend depende do banco de dados utilizando healthcheck, garantindo que só será iniciado após o banco estar pronto para conexões.
-
-### 🚀 Como Executar
-📋 Pré-requisitos:
- - Docker
- - Docker Compose
-### ▶️ Subir a aplicação:
-```bash
-docker-compose up --build --scale backend=3
-```
-### 🌐 Acesso
-A aplicação estará disponível em:
-
-```bash
-http://localhost
-```
-
----
-
-## 🧪 Teste de Funcionamento
-
-Após subir a aplicação:
-
-- Acesse http://localhost
-- Inicie um jogo
-- Verifique que múltiplas requisições são distribuídas entre os backends
-
-### Opcional:
-```bash
-docker ps
-```
-### 🛑 Parar a aplicação:
-```bash
-docker-compose down
-```
-### 🔄 Reset completo (incluindo banco):
-```bash
-docker-compose down -v
-```
-
-## ⚠️ Observações Importantes
-
-🔹 Porta 80
-- A aplicação utiliza a porta 80 do host.
-
-Certifique-se de que:
- - Nenhum outro serviço (IIS, Apache, outro NGINX) esteja utilizando essa porta
- - Caso necessário, altere no docker-compose.yml
-
-ports:
-  - "8080:80"
-
-🔹 Ambiente
-
- - Compatível com Linux, Mac e Windows
- - Em Windows, recomenda-se uso de WSL2
-
-
----
-
-## 🔄 Atualização dos Serviços
-
-A arquitetura permite atualização independente de cada componente apenas alterando a imagem ou build.
-
-🔹 Backend
-- Alterar código ou imagem no Dockerfile
-- Rebuild:
-```bash
-docker-compose up --build backend
-```
-
-🔹 Frontend
-- Alterar código React
-- Rebuild:
-```bash
-docker-compose up --build frontend
-```
-
-🔹 Banco de Dados
-- Alterar versão da imagem no docker-compose.yml:
-```
-image: postgres:15
-```
-
-🔹 NGINX
-- Alterar configuração em nginx.conf
-- Rebuild:
-```bash
-docker-compose up --build nginx
-```
----
-
-## 📌 Conclusão
-
-Este projeto atende aos requisitos propostos, incluindo:
-
-- Orquestração com Docker Compose
+- Frontend React
+- Backend Flask
+- Banco PostgreSQL
 - Persistência de dados
-- Balanceamento de carga
-- Escalabilidade horizontal
-- Resiliência a falhas
-- Facilidade de manutenção e atualização
+- Escalabilidade automática com HPA
+- Deploy automatizado com Helm
 
 ---
 
-## 📚 Referências
+# Arquitetura
 
-- Docker Documentation  
-  https://docs.docker.com/
+```text
+Frontend (React + Nginx)
+        ↓
+Backend (Flask API)
+        ↓
+PostgreSQL
+```
 
-- Docker Compose Documentation  
-  https://docs.docker.com/compose/
+---
 
-- PostgreSQL Official Documentation  
-  https://www.postgresql.org/docs/
+# Tecnologias utilizadas
 
-- NGINX Documentation  
-  https://nginx.org/en/docs/
+| Tecnologia | Função |
+|---|---|
+| Docker | Containerização |
+| Kubernetes | Orquestração |
+| k3d | Cluster Kubernetes local |
+| Helm | Gerenciamento dos manifests |
+| React | Frontend |
+| Flask | Backend |
+| PostgreSQL | Banco de dados |
+| HPA | Escalabilidade automática |
 
-- Flask Documentation  
-  https://flask.palletsprojects.com/
+---
 
-- React Documentation  
-  https://react.dev/
+# Estrutura do projeto
 
-- Repositório base do projeto  
-  https://github.com/fams/guess_game
+```text
+guess-game-k8s/
+│
+├── backend/
+│   ├── guess/
+│   ├── repository/
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── run.py
+│
+├── db/
+│   └── init.sql
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── nginx.conf
+│   ├── Dockerfile
+│   └── package.json
+│
+├── guess-game-chart/
+│   ├── templates/
+│   ├── Chart.yaml
+│   └── values.yaml
+│
+├── docker-compose.yml
+├── README.md
+└── start-backend.sh
+```
+
+---
+
+# Pré-requisitos
+
+Antes de iniciar, é necessário possuir os softwares abaixo instalados:
+
+---
+
+## Docker
+
+Instalação:
+
+https://www.docker.com/products/docker-desktop/
+
+Verificar instalação:
+
+```bash
+docker --version
+```
+
+---
+
+## kubectl
+
+Instalação:
+
+https://kubernetes.io/docs/tasks/tools/
+
+Verificar instalação:
+
+```bash
+kubectl version --client
+```
+
+---
+
+## k3d
+
+Instalação:
+
+https://k3d.io/
+
+Verificar instalação:
+
+```bash
+k3d version
+```
+
+---
+
+## Helm
+
+Instalação:
+
+https://helm.sh/docs/intro/install/
+
+Verificar instalação:
+
+```bash
+helm version
+```
+
+---
+
+# IMPORTANTE
+
+A porta abaixo precisa estar livre na máquina:
+
+```text
+8080
+```
+
+Ela será utilizada para acessar o Frontend da aplicação.
+
+---
+
+# Docker Hub
+
+As imagens utilizadas no projeto estão publicadas no Docker Hub e são baixadas automaticamente pelo Kubernetes.
+
+---
+
+# Passo a passo para subir o projeto
+
+# 1. Clonar o projeto
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+```
+
+Entrar na pasta:
+
+```bash
+cd guess-game-k8s
+```
+
+---
+
+# 2. Criar cluster k3d
+
+```bash
+k3d cluster create guess-game -p "8080:30080@loadbalancer"
+```
+
+Verificar cluster:
+
+```bash
+k3d cluster list
+```
+
+---
+
+# 3. Instalar Metrics Server
+
+Necessário para funcionamento do HPA.
+
+Instalar:
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+Editar deployment:
+
+```bash
+kubectl edit deployment metrics-server -n kube-system
+```
+
+Adicionar:
+
+```yaml
+- --kubelet-insecure-tls
+```
+
+Exemplo:
+
+```yaml
+containers:
+- args:
+  - --cert-dir=/tmp
+  - --secure-port=10250
+  - --kubelet-insecure-tls
+```
+
+Salvar e sair.
+
+Verificar:
+
+```bash
+kubectl get deployment metrics-server -n kube-system
+```
+
+---
+
+# 4. Instalar aplicação com Helm
+
+Entrar na pasta do chart:
+
+```bash
+cd guess-game-chart
+```
+
+Validar chart:
+
+```bash
+helm lint .
+```
+
+Instalar aplicação:
+
+```bash
+helm install guess-game . -n guess-game --create-namespace
+```
+
+---
+
+# 5. Verificar funcionamento
+
+Verificar pods:
+
+```bash
+kubectl get pods -n guess-game
+```
+
+Resultado esperado:
+
+```text
+backend
+frontend
+postgres
+```
+
+Verificar serviços:
+
+```bash
+kubectl get svc -n guess-game
+```
+
+Verificar HPA:
+
+```bash
+kubectl get hpa -n guess-game
+```
+
+---
+
+# 6. Acessar aplicação
+
+Abrir navegador:
+
+```text
+http://localhost:8080
+```
+
+---
+
+# Persistência
+
+O PostgreSQL utiliza PersistentVolumeClaim (PVC).
+
+Mesmo reiniciando o pod do banco, os dados permanecem salvos.
+
+Verificar PVC:
+
+```bash
+kubectl get pvc -n guess-game
+```
+
+---
+
+# Escalabilidade automática
+
+O backend utiliza Horizontal Pod Autoscaler (HPA).
+
+Verificar:
+
+```bash
+kubectl get hpa -n guess-game
+```
+
+---
+
+# Reiniciar pods
+
+## Reiniciar frontend
+
+```bash
+kubectl rollout restart deployment/frontend -n guess-game
+```
+
+## Reiniciar backend
+
+```bash
+kubectl rollout restart deployment/backend -n guess-game
+```
+
+## Reiniciar postgres
+
+```bash
+kubectl rollout restart deployment/postgres -n guess-game
+```
+
+---
+
+# Remover ambiente
+
+Remover aplicação:
+
+```bash
+helm uninstall guess-game -n guess-game
+```
+
+Remover cluster:
+
+```bash
+k3d cluster delete guess-game
+```
+
+---
+
+# Ver logs do backend
+
+```bash
+kubectl logs deployment/backend -n guess-game
+```
+
+---
+
+# Ver logs do frontend
+
+```bash
+kubectl logs deployment/frontend -n guess-game
+```
+
+---
+
+# Ver logs do postgres
+
+```bash
+kubectl logs deployment/postgres -n guess-game
+```
+
+---
+
+# Observações
+
+- O projeto foi desenvolvido utilizando k3d local.
+- O frontend é exposto utilizando NodePort.
+- O backend é acessado internamente pelo frontend utilizando Service Kubernetes.
+- O banco PostgreSQL utiliza persistência via PVC.
+- O Helm foi utilizado para automatizar os manifests Kubernetes.
+- O projeto é a continuação da primeira etapa da disciplina, onde anteriormente havia sido implementado apenas o ambiente Docker.
