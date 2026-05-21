@@ -3,7 +3,7 @@ backend:
   replicas: 3
 
 frontend:
-  image: runesma/guess-frontend:v2
+  image: runesma/guess-frontend:v6
   nodePort: 30080
 
 postgres:
